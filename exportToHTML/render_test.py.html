@@ -1,0 +1,157 @@
+<html>
+<head>
+<title>render_test.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #999999; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); font-style: italic; }
+.s1 { color: rgb(0,0,0); }
+.s2 { color: rgb(0,0,128); font-weight: bold; }
+.s3 { color: rgb(0,128,0); font-weight: bold; }
+.s4 { color: rgb(0,0,255); }
+</style>
+</head>
+<BODY BGCOLOR="#ffffff">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+render_test.py</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0"># -*- coding: UTF-8 -*-</span><span class="s1"> 
+ 
+</span><span class="s2">from </span><span class="s1">Spaghetti </span><span class="s2">import </span><span class="s1">Orient_Node 
+</span><span class="s2">from </span><span class="s1">Spaghetti </span><span class="s2">import </span><span class="s1">USC 
+</span><span class="s2">from </span><span class="s1">ete3 </span><span class="s2">import </span><span class="s1">TreeStyle, NodeStyle, TextFace, add_face_to_node 
+</span><span class="s2">from </span><span class="s1">Spaghetti </span><span class="s2">import </span><span class="s1">USC_Pyorient_Adapter </span><span class="s2">as </span><span class="s1">UPA 
+</span><span class="s2">import </span><span class="s1">time 
+ 
+</span><span class="s0">#I'm not sure this can exist happily here...</span><span class="s1"> 
+DB = UPA.pyo_adapter(host=</span><span class="s3">&quot;localhost&quot;</span><span class="s1">, port=</span><span class="s4">2424</span><span class="s1">, db=</span><span class="s3">&quot;USC &quot;</span><span class="s1">, user=</span><span class="s3">&quot;root&quot;</span><span class="s1">, 
+                         pswd=</span><span class="s3">&quot;10171017&quot;</span><span class="s1">)  </span><span class="s0"># {PBKDF2WithHmacSHA1}FEC813A8AE9240A9A2EA855F6365C4E67339A62C407960D9:815E77BB31AFF6DBE82B11D9F2918E4283A9E5CBA3A856EA:65536</span><span class="s1"> 
+DB.setup_server() 
+DB.connect_server() 
+time.sleep(</span><span class="s4">.5</span><span class="s1">) </span><span class="s0"># may be superfluous</span><span class="s1"> 
+DB.connect_database() 
+time.sleep(</span><span class="s4">.5</span><span class="s1">) </span><span class="s0"># may be superfluous</span><span class="s1"> 
+ 
+tit15 = USC.get_Title_XML_Tree(</span><span class="s4">9</span><span class="s1">) 
+USC_title15_node = tit15.find(</span><span class="s3">'{http://xml.house.gov/schemas/uslm/1.0}main'</span><span class="s1">).find(</span><span class="s3">'{http://xml.house.gov/schemas/uslm/1.0}title'</span><span class="s1">) 
+ 
+</span><span class="s0">#this is a cludgy &quot;layout function&quot; that ensures the internal node names are shown too...</span><span class="s1"> 
+</span><span class="s0">#gets passed as a parameter to a treestyle obj. E.g. tree_style_obj.layout_fun = layout_function</span><span class="s1"> 
+</span><span class="s2">def </span><span class="s1">show_Internal_Nodes(node): 
+    F = TextFace(node.name, tight_text = True) 
+    add_face_to_node(F, node, column=</span><span class="s4">0</span><span class="s1">, position = </span><span class="s3">&quot;branch-right&quot;</span><span class="s1">) 
+ 
+</span><span class="s0">#pre-define treestyle</span><span class="s1"> 
+</span><span class="s0">#TODO: move this into some sort of data file / external py and make multiple options available.</span><span class="s1"> 
+default = TreeStyle() 
+default.show_leaf_name = False </span><span class="s0">#this can be false because the layout function will add titles to ALL nodes and leaving this true is redundant / duplicative</span><span class="s1"> 
+default.show_branch_support = False 
+default.mode=</span><span class="s3">&quot;r&quot; </span><span class="s0">#c = circular, r = rectangular</span><span class="s1"> 
+default.scale = </span><span class="s4">15</span><span class="s1"> 
+default.layout_fn = show_Internal_Nodes </span><span class="s0">#pass the layout function created above...</span><span class="s1"> 
+default.title.add_face(TextFace(</span><span class="s3">&quot;Structure of Title 9&quot;</span><span class="s1">,fsize = </span><span class="s4">20</span><span class="s1">),column=</span><span class="s4">0</span><span class="s1">) </span><span class="s0">#this might belong in the layout function... not sure how to vary formatting by node type</span><span class="s1"> 
+ 
+</span><span class="s0">#DEF: Style for different types of node:</span><span class="s1"> 
+</span><span class="s0">#TODO: move this into some sort of data file / external py and use dictionary lookup for easy editing.</span><span class="s1"> 
+title_style = NodeStyle() 
+title_style[</span><span class="s3">&quot;fgcolor&quot;</span><span class="s1">] = </span><span class="s3">&quot;red&quot;</span><span class="s1"> 
+title_style[</span><span class="s3">&quot;size&quot;</span><span class="s1">]=</span><span class="s4">20</span><span class="s1"> 
+ 
+chapter_style = NodeStyle() 
+chapter_style[</span><span class="s3">&quot;fgcolor&quot;</span><span class="s1">]=</span><span class="s3">&quot;blue&quot;</span><span class="s1"> 
+chapter_style[</span><span class="s3">&quot;size&quot;</span><span class="s1">]=</span><span class="s4">15</span><span class="s1"> 
+ 
+subchapter_style = NodeStyle() 
+subchapter_style[</span><span class="s3">&quot;fgcolor&quot;</span><span class="s1">] = </span><span class="s3">&quot;yellow&quot;</span><span class="s1"> 
+subchapter_style[</span><span class="s3">&quot;size&quot;</span><span class="s1">] = </span><span class="s4">15</span><span class="s1"> 
+ 
+section_style = NodeStyle() 
+section_style[</span><span class="s3">&quot;fgcolor&quot;</span><span class="s1">]=</span><span class="s3">&quot;black&quot;</span><span class="s1"> 
+section_style[</span><span class="s3">&quot;size&quot;</span><span class="s1">] = </span><span class="s4">10</span><span class="s1"> 
+ 
+subsection_style = NodeStyle() 
+subsection_style[</span><span class="s3">&quot;fgcolor&quot;</span><span class="s1">] = </span><span class="s3">&quot;brown&quot;</span><span class="s1"> 
+subchapter_style[</span><span class="s3">&quot;size&quot;</span><span class="s1">]=</span><span class="s4">8</span><span class="s1"> 
+ 
+content_style = NodeStyle() 
+ 
+</span><span class="s0">###############################################################################################3</span><span class="s1"> 
+ 
+</span><span class="s0">#def recursive_Save_To_DB(root=None, rid_dict=None, node_dict = None):</span><span class="s1"> 
+ 
+ 
+</span><span class="s2">def </span><span class="s1">setup_Tree_DB(nodes, root): 
+ 
+    </span><span class="s2">print </span><span class="s3">&quot;Nodes&quot;</span><span class="s1"> 
+    </span><span class="s2">print </span><span class="s1">nodes 
+    </span><span class="s0">#map absolute addresses to the rid of the node in the orientDB</span><span class="s1"> 
+    rid_Dict = {} 
+ 
+    </span><span class="s0">#setup the dictionaries so we can do quick lookups...</span><span class="s1"> 
+    </span><span class="s2">for </span><span class="s1">a </span><span class="s2">in </span><span class="s1">nodes: 
+        rid = DB.add_Node(nodes[a]) 
+        </span><span class="s2">if </span><span class="s1">(rid == None): 
+            </span><span class="s0">#lookup node as it already exists...</span><span class="s1"> 
+            result = DB.get_Node_By_Address(nodes[a].absolute_address) 
+            nodes[a].rid = result[</span><span class="s4">0</span><span class="s1">] </span><span class="s0">#log the rid in the Orient Node Object as well.</span><span class="s1"> 
+            rid_Dict[a]=result[</span><span class="s4">0</span><span class="s1">] 
+        </span><span class="s2">else</span><span class="s1">: 
+            </span><span class="s0">#TODO:might be worth checking that output matches what is expected (hash_tag)__:__</span><span class="s1"> 
+            rid_Dict[a] = rid 
+            nodes[a].rid = rid </span><span class="s0">#log the rid in the Orient Node Object as well.</span><span class="s1"> 
+            </span><span class="s0">#TODO: start with the root note... map children... Then get a list of all children elements and map their children..</span><span class="s1"> 
+            </span><span class="s0">#root.rid = rid_Dict[root.absolute_address]</span><span class="s1"> 
+ 
+    </span><span class="s0">#starting with the provided root node... go through and link all the nodes...</span><span class="s1"> 
+    chp2 = nodes[</span><span class="s3">&quot;/us/usc/t9/ch2&quot;</span><span class="s1">] 
+ 
+    </span><span class="s2">print </span><span class="s3">'Chap2 Identifier'</span><span class="s1"> 
+ 
+    </span><span class="s0">#get parent rid</span><span class="s1"> 
+    </span><span class="s2">print </span><span class="s1">chp2.parent</span><span class="s0">#.attrib['identifier']</span><span class="s1"> 
+    p_rid = rid_Dict[chp2.parent.absolute_address]._rid 
+ 
+    c_rids=[] 
+    </span><span class="s0">#parse children ids..</span><span class="s1"> 
+    </span><span class="s2">for </span><span class="s1">c </span><span class="s2">in </span><span class="s1">chp2.children: 
+       c_rids.append(rid_Dict[c.absolute_address]._rid) 
+ 
+    </span><span class="s2">print </span><span class="s1">p_rid 
+    </span><span class="s2">print </span><span class="s1">c_rids 
+ 
+    </span><span class="s0">#attempting to link nodes in db</span><span class="s1"> 
+    DB.link_Node(rid_Dict[chp2.absolute_address],c_rids,p_rid) 
+ 
+    </span><span class="s2">print </span><span class="s3">'Logging edge'</span><span class="s1"> 
+    </span><span class="s2">print </span><span class="s1">DB.add_Unlinked_Edge(</span><span class="s3">'Test3'</span><span class="s1">,</span><span class="s3">'Test1'</span><span class="s1">) 
+ 
+</span><span class="s0">#fill database with arbitrary range of titles</span><span class="s1"> 
+</span><span class="s2">def </span><span class="s1">populate_Titles(start_Title = </span><span class="s4">1</span><span class="s1">, end_Title=</span><span class="s4">1</span><span class="s1">): 
+ 
+    </span><span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range(start_Title,end_Title): 
+        tit = USC.get_Title_XML_Tree(i) 
+        USC_title_node = tit.find(</span><span class="s3">'{http://xml.house.gov/schemas/uslm/1.0}main'</span><span class="s1">).find( 
+        </span><span class="s3">'{http://xml.house.gov/schemas/uslm/1.0}title'</span><span class="s1">) 
+        title_obj = Orient_Node.Orient_Node(root=USC_title_node,DB=DB) 
+ 
+        </span><span class="s2">print </span><span class="s1">title_obj 
+ 
+populate_Titles(</span><span class="s4">4</span><span class="s1">,</span><span class="s4">10</span><span class="s1">) 
+ 
+ 
+</span><span class="s0">#print('Testing Render')</span><span class="s1"> 
+</span><span class="s0">#test.render('./test.png', w=1920, units = &quot;px&quot;, tree_style=default)</span><span class="s1"> 
+</span><span class="s0">#print('Render Complete')</span><span class="s1"> 
+ 
+</span><span class="s0">#Trying to figure out how to get the ; and ;or from the content nodes... they're locked by hrefs.</span><span class="s1"> 
+</span><span class="s0">#specifically, going to be working with /us/usc/t9/s16/b/1</span><span class="s1"> 
+</span><span class="s0"># print test.abs_Addresses</span><span class="s1"> 
+</span><span class="s0"># plaything = test.abs_Addresses.get('/us/usc/t9/s201').node.find('{http://xml.house.gov/schemas/uslm/1.0}content')</span><span class="s1"> 
+</span><span class="s0"># print plaything[:]</span><span class="s1"> 
+ 
+</span></pre>
+</body>
+</html>

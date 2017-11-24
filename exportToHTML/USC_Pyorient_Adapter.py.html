@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>USC_Pyorient_Adapter.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #999999; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(0,0,128); font-weight: bold; }
+.s1 { color: rgb(0,0,0); }
+.s2 { color: rgb(128,128,128); font-style: italic; }
+.s3 { color: rgb(0,128,0); font-weight: bold; }
+.s4 { color: rgb(0,0,255); }
+</style>
+</head>
+<BODY BGCOLOR="#ffffff">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+USC_Pyorient_Adapter.py</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">import </span><span class="s1">pyorient 
+</span><span class="s0">import </span><span class="s1">Queue </span><span class="s0">as </span><span class="s1">queue 
+</span><span class="s0">import </span><span class="s1">time 
+ 
+</span><span class="s2">#for multithreading... look here: Stackoverflow &quot;How to make program wait till function's or method's completion&quot;</span><span class="s1"> 
+</span><span class="s0">class </span><span class="s1">pyo_adapter(object): 
+    </span><span class="s2">#</span><span class="s1"> 
+ 
+    </span><span class="s0">def </span><span class="s1">__init__(self, host = </span><span class="s3">&quot;localhost&quot;</span><span class="s1">, port = </span><span class="s4">2424</span><span class="s1">, db = </span><span class="s3">&quot;USC&quot;</span><span class="s1">, user=</span><span class="s3">&quot;root&quot;</span><span class="s1">,pswd=</span><span class="s3">&quot;&quot;</span><span class="s1">): 
+        self.pyo_client = None 
+        self.user = user 
+        self.pswd = pswd 
+        self.host = host 
+        self.port = port 
+        self.db = db 
+        self.connected = False 
+ 
+    </span><span class="s0">def </span><span class="s1">setup_server(self): 
+        self.pyo_client = pyorient.OrientDB(self.host,self.port) 
+        self.connected = True </span><span class="s2">#TODO: I don't know how to update this if connection crashes unexpectedly...</span><span class="s1"> 
+ 
+    </span><span class="s0">def </span><span class="s1">connect_server(self): 
+        </span><span class="s0">if </span><span class="s1">self.pyo_client!=None: 
+            self.pyo_client.connect(self.user, self.pswd) 
+            </span><span class="s0">return </span><span class="s1">True 
+ 
+        </span><span class="s0">return </span><span class="s1">False 
+ 
+    </span><span class="s0">def </span><span class="s1">connect_database(self,database=</span><span class="s3">'USC'</span><span class="s1">): 
+        </span><span class="s0">print </span><span class="s3">&quot;Database exists:&quot;</span><span class="s1"> 
+        </span><span class="s0">print </span><span class="s1">self.pyo_client.db_exists(</span><span class="s3">&quot;USC&quot;</span><span class="s1">, pyorient.STORAGE_TYPE_LOCAL) 
+        </span><span class="s0">print </span><span class="s3">&quot;Databases&quot;</span><span class="s1"> 
+        </span><span class="s0">print </span><span class="s1">self.pyo_client.db_list() 
+        </span><span class="s2">#self.pyo_client.db_create(&quot;USC&quot;, pyorient.DB_TYPE_GRAPH, pyorient.STORAGE_TYPE_MEMORY)</span><span class="s1"> 
+        self.pyo_client.db_open(database.encode(</span><span class="s3">&quot;ascii&quot;</span><span class="s1">,</span><span class="s3">&quot;ignore&quot;</span><span class="s1">),self.user,self.pswd) 
+ 
+    </span><span class="s0">def </span><span class="s1">add_Unlogged_Edge(self): 
+        </span><span class="s2">#this will add edges from the &lt;ref&gt; tags as the title is processes.</span><span class="s1"> 
+        </span><span class="s2">#these can later be used to generate links within the Node schema.</span><span class="s1"> 
+        </span><span class="s0">print </span><span class="s3">&quot;dummy&quot;</span><span class="s1"> 
+ 
+    </span><span class="s0">def </span><span class="s1">get_All_Unlogged_Edges(self): 
+        </span><span class="s0">return </span><span class="s1">self.pyo_client.query(</span><span class="s3">&quot;SELECT * FROM Edges_To_Add&quot;</span><span class="s1">) 
+ 
+    </span><span class="s2">#takes an ETE_Node object and uploads it to the persistent storage in DB</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">add_Node(self, ETE_Node = None): 
+        </span><span class="s0">print </span><span class="s3">&quot;dummy&quot;</span><span class="s1"> 
+    </span><span class="s2">#takes a given (ETE_Node? Not sure appropriate object to start with) and loads all children into memory</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">load_All_Nodes (self, start_Node=None): 
+        </span><span class="s0">print </span><span class="s3">&quot;dummy&quot;</span><span class="s1"> 
+    </span><span class="s2">#takes a given address and attempts to find Node info from DB. Generate ETE_Node and return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">load_Node(self, abs_Address=</span><span class="s3">''</span><span class="s1">): 
+        </span><span class="s0">print </span><span class="s3">&quot;dummy&quot;</span><span class="s1"> 
+    </span><span class="s2">#run through all edges and attempt to generate relationships in the Node schema</span><span class="s1"> 
+    </span><span class="s2">#remove the edges as they are successfully processes.</span><span class="s1"> 
+    </span><span class="s2">#leave them if the relationship cannot be added.</span><span class="s1"> 
+    </span><span class="s2">#TODO: return list of unadded relationships</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">process_Unlogged_Edges(self): 
+        </span><span class="s0">print </span><span class="s3">&quot;dummy&quot;</span><span class="s1"> 
+</span></pre>
+</body>
+</html>

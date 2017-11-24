@@ -1,0 +1,165 @@
+# -*- coding: UTF-8 -*-
+
+import xml.etree.ElementTree as ET
+
+# libraries to handle zip files on the house website
+from zipfile import ZipFile
+
+# libraries to handle file I/O
+from io import BytesIO
+from sys import argv
+import os
+
+# libraries to interact with the web
+from urllib.request import urlopen
+
+# lookup of usc xml files as of Sept 15, 2016. These will need some way of being refreshed as they don't
+# appear to be static.
+USC_URLS = {1: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc01@114-219.zip',
+            2: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc02@114-219.zip',
+            3: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc03@114-219.zip',
+            4: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc04@114-219.zip',
+            5: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc05@114-219.zip',
+            6: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc06@114-219.zip',
+            7: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc07@114-219.zip',
+            8: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc08@114-219.zip',
+            9: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc09@114-219.zip',
+            10: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc10@114-219.zip',
+            11: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc11@114-219.zip',
+            12: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc12@114-219.zip',
+            13: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc13@114-219.zip',
+            14: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc14@114-219.zip',
+            15: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc15@114-219.zip',
+            16: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc16@114-219.zip',
+            17: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc17@114-219.zip',
+            18: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc18@114-219.zip',
+            19: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc19@114-219.zip',
+            20: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc20@114-219.zip',
+            21: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc21@114-219.zip',
+            22: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc22@114-219.zip',
+            23: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc23@114-219.zip',
+            24: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc24@114-219.zip',
+            25: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc25@114-219.zip',
+            26: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc26@114-219.zip',
+            27: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc27@114-219.zip',
+            28: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc28@114-219.zip',
+            29: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc29@114-219.zip',
+            30: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc30@114-219.zip',
+            31: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc31@114-219.zip',
+            32: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc32@114-219.zip',
+            33: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc33@114-219.zip',
+            #34: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc34@114-219.zip', THERE IS NO TITLE 34...
+            35: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc35@114-219.zip',
+            36: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc36@114-219.zip',
+            37: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc37@114-219.zip',
+            38: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc38@114-219.zip',
+            39: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc39@114-219.zip',
+            40: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc40@114-219.zip',
+            41: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc41@114-219.zip',
+            42: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc42@114-219.zip',
+            43: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc43@114-219.zip',
+            44: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc44@114-219.zip',
+            45: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc45@114-219.zip',
+            46: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc46@114-219.zip',
+            47: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc47@114-219.zip',
+            48: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc48@114-219.zip',
+            49: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc49@114-219.zip',
+            50: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc50@114-219.zip',
+            51: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc51@114-219.zip',
+            52: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc52@114-219.zip',
+            53: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc53@114-219.zip',
+            54: 'http://uscode.house.gov/download/releasepoints/us/pl/114/219u1/xml_usc54@114-219.zip',
+            }
+
+# dictionary to hold the zip files as they are extracted... no point in doing this multiple times
+# as it's bandwidth, memory, and processor intensive.
+# TODO: Ideally, this will be stored on disk so you don't need to redownload and reprocess every session
+USC_Zips = {}
+
+
+def count_Titles():
+    return len(USC_URLS)
+
+
+# takes in the Title # of the USC Code, downloads the appropriate xml zip, extracts it,
+# and returns a parsed xml tree.
+def fetch_Title_XML(title_num, to_cache):
+    # lookup the USC url open it as url obj with urlopen.
+    url = urlopen(USC_URLS[title_num])
+
+    # fetch the zip data from the url and create zipfile obj.
+    zipfile = ZipFile(BytesIO(url.read()))
+
+    # as of Sept, 2016, the file format contains merely one file in an archive, so we can confidently unzip
+    # the one and only file in the archive as the xml file.
+    if len(zipfile.namelist()) > 0:
+        # extract the unzipped xml to the cache directory if to_cache is true
+        if to_cache == True:
+            zipfile.extract(zipfile.namelist()[0], '/home/jman/Python/USC_Visualizer/XML_Cache')
+            print('XML Archive of Title ' + str(title_num) + ' written to disk')
+
+        # open the xml object to return.
+        unzipped_xml = zipfile.open(zipfile.namelist()[0])
+    else:
+        raise ValueError('USC XML Archive Appears to be empty...')
+
+    return unzipped_xml
+
+
+# this get_method scans the XML Cache and avoids redownloading and reunzipping if this operations was previously completed
+def get_Title_XML_Tree(title_num):
+    # if local cache is empty
+    if (is_Title_XML_Cached(title_num) == False):
+        fetch_Title_XML(title_num, True)
+
+    # hard coded path to XML cache directory
+    find_string = '/home/jman/Python/USC_Visualizer/XML_Cache/usc'
+
+    # if the num is less than 10, we need to add a 0 first.
+    if title_num < 10:
+        find_string += '0' + str(title_num) + '.xml'
+    else:
+        find_string += str(title_num) + '.xml'
+
+    # parse the unzipped xml
+    tree = ET.parse(find_string)
+
+    return tree
+
+
+# takes a title xml tree object and returns the heading
+def get_Title_XMLNS(title_XML_Root):
+    xmlns = title_XML_Root.getroot().tag.split('}')[0] + '}'
+    return xmlns
+
+
+# xmlns is hardcoded for the moment...
+def get_Title_Heading(title_num):
+    tree = get_Title_XML_Tree(title_num)
+    main = tree.find('{http://xml.house.gov/schemas/uslm/1.0}main')
+    title = main.find('{http://xml.house.gov/schemas/uslm/1.0}title')
+    heading = title.find('{http://xml.house.gov/schemas/uslm/1.0}heading')
+    print(heading.text)
+
+
+def is_Title_XML_Cached(title_num):
+    # this is the default naming convention of the xml zip packages (usx##.xml)
+
+    find_string = 'usc'
+    if title_num < 10:
+        find_string += '0' + str(title_num) + '.xml'
+    else:
+        find_string += str(title_num) + '.xml'
+
+    # search in the packages XML_Cache directory for the file name
+    ##TODO: fix the path hardcoding so this would work in other OSes
+    # print 'Listing all archived XML files'
+    # print os.listdir('C:\Spaghetti\XML_Cache\\')
+    for name in os.listdir('/home/jman/Python/USC_Visualizer/XML_Cache'):
+        ##print name
+        if name == find_string:
+            return True
+    return False
+
+    # catchall return False
+    return False
